@@ -2,9 +2,6 @@ name: Create Feature Issue Backlog
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "copilot/generate-issue-backlog"
 
 permissions:
   issues: write
@@ -23,16 +20,13 @@ jobs:
             const fs = require('fs');
             const issues = JSON.parse(fs.readFileSync('.github/issue-backlog.json', 'utf8'));
 
-            const existing = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'all',
-              per_page: 100,
-            });
-            const existingTitles = new Set(existing.data.map(i => i.title));
-
             for (const issue of issues) {
-              if (existingTitles.has(issue.title)) {
+              // Use search API to check for exact title match across all issues
+              const searchResult = await github.rest.search.issuesAndPullRequests({
+                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue in:title "${issue.title}"`,
+              });
+              const exactMatch = searchResult.data.items.some(i => i.title === issue.title);
+              if (exactMatch) {
                 console.log(`Skipping (already exists): "${issue.title}"`);
                 continue;
               }
