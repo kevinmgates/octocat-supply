@@ -15,6 +15,7 @@ const order_1 = __importDefault(require("./routes/order"));
 const branch_1 = __importDefault(require("./routes/branch"));
 const headquarters_1 = __importDefault(require("./routes/headquarters"));
 const supplier_1 = __importDefault(require("./routes/supplier"));
+const agent_1 = __importDefault(require("./routes/agent"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
 // Parse CORS origins from environment variable if available
@@ -70,6 +71,7 @@ app.use('/api/orders', order_1.default);
 app.use('/api/branches', branch_1.default);
 app.use('/api/headquarters', headquarters_1.default);
 app.use('/api/suppliers', supplier_1.default);
+app.use('/api/agent', agent_1.default);
 app.get('/', (req, res) => {
     res.send('Hello, world!');
 });
