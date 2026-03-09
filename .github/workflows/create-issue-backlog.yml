@@ -1,0 +1,188 @@
+name: Create Feature Issue Backlog
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  create-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Feature 1 - AI Customer Service Agent
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+            });
+            const titles = existing.data.map(i => i.title);
+
+            const issues = [
+              {
+                title: "Feature: AI Customer Service Agent (Microsoft Azure AI Foundry)",
+                body: `## Summary
+Add a customer-facing chat agent to OctoCAT Supply, powered by Microsoft Azure AI Foundry. The agent answers questions about orders, products, and delivery status using the app's own data.
+
+## Background
+Discussed in the Sprint Kickoff meeting (March 9, 2026). This is the headline feature for demonstrating Microsoft Azure AI Foundry (formerly Azure AI Studio) in the context of GitHub Copilot demos.
+
+## Scope
+
+### Backend
+- Add a new route \`POST /api/agent/chat\` that proxies requests to the Azure AI Foundry inference endpoint.
+- Define an agent in Azure AI Foundry with two tools:
+  - \`get_order_status\` — calls the existing \`GET /api/orders/:id\` endpoint
+  - \`search_products\` — queries an Azure AI Search index over the product catalog
+- Store the Azure AI Foundry API key in Azure Key Vault; surface it to the Express backend via environment variable.
+- Set up an Azure AI Search index over the JSON product catalog fixtures.
+
+### Frontend
+- Add a new \`ChatPanel\` React component — a floating chat widget always accessible outside the main router.
+- Manage chat state locally or with a small Zustand store.
+- Add a floating trigger button to open/close the panel.
+
+### Infrastructure
+- New feature branch: \`feature/ai-customer-service-agent\`
+- Document required environment variables and Foundry provisioning steps in \`docs/foundry-setup.md\`.
+
+## Acceptance Criteria
+- [ ] \`POST /api/agent/chat\` accepts a user message and returns a natural-language response from the Azure AI Foundry agent.
+- [ ] The agent correctly resolves order status queries by calling the live \`/api/orders/:id\` endpoint.
+- [ ] The agent correctly answers product catalog questions via Azure AI Search.
+- [ ] \`ChatPanel\` component renders a floating chat widget that is accessible on all pages.
+- [ ] The chat widget sends and receives messages without page navigation.
+- [ ] API key is not exposed to the frontend or committed to source control.
+- [ ] \`docs/foundry-setup.md\` documents environment variables and provisioning steps.
+- [ ] Existing tests continue to pass.
+
+## Demo Notes
+**Key wow moment:** Customer asks "Where is order 1042?" and the agent calls the live \`/api/orders/:id\` endpoint, retrieves delivery status, and responds in natural language.
+
+Also demonstrate the Azure AI Foundry portal — agent playground, evaluation tab, and deployment endpoint.
+
+Use Copilot Agent Mode with a UI mockup image to generate the \`ChatPanel\` component (demonstrates Copilot vision/image understanding).
+
+## Labels
+\`enhancement\`, \`ai\`, \`azure\`, \`frontend\`, \`backend\``,
+                labels: ["enhancement"],
+              },
+              {
+                title: "Feature: Intelligent Order Anomaly Detection",
+                body: `## Summary
+Add an intelligent anomaly detection service to OctoCAT Supply that scans incoming orders and flags unusual patterns. Results are surfaced in the admin order view.
+
+## Background
+Discussed in the Sprint Kickoff meeting (March 9, 2026). Demonstrates AI-assisted risk detection in an enterprise supply chain context, with explainability via Azure AI Foundry / GPT-4o.
+
+## Scope
+
+### Backend
+- Add a new \`OrderAnomalyService\` class in the API.
+  - Async and non-blocking — called after order creation without blocking the order confirmation response.
+  - Uses GPT-4o via Azure AI Foundry with a system prompt defining normal vs. anomalous order patterns.
+  - Returns structured JSON: \`{ anomaly_score: 0–1, flags: string[], reasoning: string }\`
+- Add new fields to the order model: \`anomaly_score\` (float), \`anomaly_flags\` (string array).
+- Wire the service into the order controller as an async fire-and-forget call post-creation.
+
+### Frontend
+- Add an \`AnomalyBadge\` component — a yellow warning triangle with a tooltip showing the anomaly flags and reasoning.
+- Add a "Show flagged orders only" filter toggle to the admin order table.
+
+### Infrastructure
+- New feature branch: \`feature/order-anomaly-detection\`
+
+## Acceptance Criteria
+- [ ] \`OrderAnomalyService\` scores each new order asynchronously without delaying the order creation response.
+- [ ] Anomaly scoring calls GPT-4o via Azure AI Foundry and receives structured \`{ anomaly_score, flags, reasoning }\` output.
+- [ ] \`anomaly_score\` and \`anomaly_flags\` are persisted to the order record after scoring completes.
+- [ ] \`AnomalyBadge\` is displayed on flagged orders in the admin order table.
+- [ ] Tooltip on \`AnomalyBadge\` shows the \`flags\` and \`reasoning\` fields.
+- [ ] Admin order table includes a working "Show flagged orders only" filter.
+- [ ] Anomaly service failure does not break order creation.
+- [ ] Existing tests continue to pass.
+
+## Demo Notes
+**Key talking point:** The \`reasoning\` field provides explainability — e.g., "This order was flagged because the quantity is 4x the branch average." This resonates strongly in enterprise risk conversations.
+
+Demonstrate the async pattern: order confirmation is instant; the anomaly badge appears shortly after as the score is computed.
+
+Use GitHub Copilot to generate the \`AnomalyBadge\` component following existing component patterns in the repo (should take ~30 seconds with Copilot).
+
+## Labels
+\`enhancement\`, \`ai\`, \`azure\`, \`frontend\`, \`backend\``,
+                labels: ["enhancement"],
+              },
+              {
+                title: "Feature: GitHub Copilot-Assisted API Documentation Generator",
+                body: `## Summary
+Add a GitHub Actions workflow that runs on pull requests to the API, uses the GitHub Models API (GPT-4o) to read Express route definitions, and automatically proposes OpenAPI documentation updates as a PR review comment.
+
+## Background
+Discussed in the Sprint Kickoff meeting (March 9, 2026). Demonstrates AI integration in the CI/CD pipeline — not just in the editor. Shows the full AI-augmented developer lifecycle: write code → open PR → Copilot reviews for security (GHAS) → documentation bot proposes doc updates.
+
+## Scope
+
+### GitHub Actions Workflow
+- New file: \`.github/workflows/api-docs-generator.yml\`
+- Trigger: \`pull_request\` targeting \`main\`, filtered to paths \`api/**\`
+- Steps:
+  1. Checkout the repository
+  2. Extract TypeScript route definitions from changed \`api/src/routes/**\` files
+  3. Call GPT-4o via the GitHub Models API (authenticated with \`GITHUB_TOKEN\` — no extra credentials required)
+  4. Post a PR review comment containing the suggested OpenAPI YAML diff
+- **No auto-commit** — propose changes via PR review comment only, requiring human approval.
+
+### API Route Cleanup
+- Add JSDoc comments to each route handler in \`api/src/routes/\` to improve signal quality for the model.
+
+### Documentation
+- Add a section to \`docs/demo-script.md\` describing how to walk through the PR timeline showing the bot's documentation comments during a live demo.
+
+### Infrastructure
+- New feature branch: \`feature/copilot-api-doc-generator\`
+
+## Acceptance Criteria
+- [ ] Workflow file \`.github/workflows/api-docs-generator.yml\` exists and is syntactically valid.
+- [ ] Workflow triggers on \`pull_request\` events targeting \`main\` for changes under \`api/**\`.
+- [ ] Workflow authenticates to GitHub Models API using \`GITHUB_TOKEN\` (no additional secrets required).
+- [ ] On a PR that modifies API routes, the workflow posts a review comment with suggested OpenAPI YAML for the changed routes.
+- [ ] The workflow does not auto-commit any files.
+- [ ] All route handlers in \`api/src/routes/\` have JSDoc comments describing their purpose and parameters.
+- [ ] \`docs/demo-script.md\` includes a section describing the API doc generator workflow demo.
+- [ ] Existing tests continue to pass.
+
+## Demo Notes
+**Key wow moment:** Open a PR that adds a new API endpoint, then navigate to the PR timeline — a GitHub bot comment appears with the proposed OpenAPI documentation for the new route. Reviewer clicks approve and the docs are committed.
+
+This is a two-minute wow moment in a live demo. Emphasize:
+1. Developer wrote the route — no manual docs needed
+2. Copilot reviewed the code for security via GHAS
+3. The doc generator bot proposed documentation automatically
+4. Reviewer has full control (no auto-commit)
+
+**Model:** GPT-4o via GitHub Models. No additional Azure credentials — \`GITHUB_TOKEN\` is all that's needed.
+
+## Labels
+\`enhancement\`, \`github-actions\`, \`documentation\`, \`ai\``,
+                labels: ["enhancement"],
+              },
+            ];
+
+            for (const issue of issues) {
+              if (titles.includes(issue.title)) {
+                console.log(`Issue already exists: "${issue.title}" — skipping.`);
+                continue;
+              }
+              const result = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issue.title,
+                body: issue.body,
+                labels: issue.labels,
+              });
+              console.log(`Created issue #${result.data.number}: ${issue.title}`);
+            }
