@@ -1,0 +1,151 @@
+"use strict";
+/**
+ * @swagger
+ * tags:
+ *   name: Order Details
+ *   description: API endpoints for managing order details
+ */
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * @swagger
+ * /api/order-details:
+ *   get:
+ *     summary: Returns all order details
+ *     tags: [Order Details]
+ *     responses:
+ *       200:
+ *         description: List of all order details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/OrderDetail'
+ *   post:
+ *     summary: Create a new order detail
+ *     tags: [Order Details]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/OrderDetail'
+ *     responses:
+ *       201:
+ *         description: Order detail created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OrderDetail'
+ *
+ * /api/order-details/{id}:
+ *   get:
+ *     summary: Get an order detail by ID
+ *     tags: [Order Details]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order detail ID
+ *     responses:
+ *       200:
+ *         description: Order detail found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OrderDetail'
+ *       404:
+ *         description: Order detail not found
+ *   put:
+ *     summary: Update an order detail
+ *     tags: [Order Details]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order detail ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/OrderDetail'
+ *     responses:
+ *       200:
+ *         description: Order detail updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OrderDetail'
+ *       404:
+ *         description: Order detail not found
+ *   delete:
+ *     summary: Delete an order detail
+ *     tags: [Order Details]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Order detail ID
+ *     responses:
+ *       204:
+ *         description: Order detail deleted successfully
+ *       404:
+ *         description: Order detail not found
+ */
+const express_1 = __importDefault(require("express"));
+const seedData_1 = require("../seedData");
+const router = express_1.default.Router();
+let orderDetails = [...seedData_1.orderDetails];
+// Create a new order detail
+router.post('/', (req, res) => {
+    const newOrderDetail = req.body;
+    orderDetails.push(newOrderDetail);
+    res.status(201).json(newOrderDetail);
+});
+// Get all order details
+router.get('/', (req, res) => {
+    res.json(orderDetails);
+});
+// Get an order detail by ID
+router.get('/:id', (req, res) => {
+    const orderDetail = orderDetails.find(od => od.orderDetailId === parseInt(req.params.id));
+    if (orderDetail) {
+        res.json(orderDetail);
+    }
+    else {
+        res.status(404).send('Order detail not found');
+    }
+});
+// Update an order detail by ID
+router.put('/:id', (req, res) => {
+    const index = orderDetails.findIndex(od => od.orderDetailId === parseInt(req.params.id));
+    if (index !== -1) {
+        orderDetails[index] = req.body;
+        res.json(orderDetails[index]);
+    }
+    else {
+        res.status(404).send('Order detail not found');
+    }
+});
+// Delete an order detail by ID
+router.delete('/:id', (req, res) => {
+    const index = orderDetails.findIndex(od => od.orderDetailId === parseInt(req.params.id));
+    if (index !== -1) {
+        orderDetails.splice(index, 1);
+        res.status(204).send();
+    }
+    else {
+        res.status(404).send('Order detail not found');
+    }
+});
+exports.default = router;
