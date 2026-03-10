@@ -9,6 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AdminProducts from './components/admin/AdminProducts';
 import { useTheme } from './context/ThemeContext';
+import ChatPanel from './components/ChatPanel';
 
 // Wrapper component to apply theme classes
 function ThemedApp() {
@@ -28,6 +29,7 @@ function ThemedApp() {
           </Routes>
         </main>
         <Footer />
+        <ChatPanel />
       </div>
     </Router>
   );
